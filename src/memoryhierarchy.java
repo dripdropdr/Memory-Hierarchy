@@ -91,7 +91,6 @@ public class memoryhierarchy {
         // 데이터 호출 - 100,000번 기준
         for(int i = 0; i<100000; i++){
 
-
 //            //데이터 접근
 //            int n;
 //            while(true){
@@ -156,13 +155,39 @@ public class memoryhierarchy {
             // L3에 있는지 없는지 확인 + 각 block에 호출 timestamp 기록
             if (!flg){
                 //현재 cache size가 0일 경우
-                if(L3.cache2way.size() == 0){
-                    L3_HitMissCount[1]++;
-                    L3_accessTime += System.currentTimeMillis() - start;
-                }
+//                if(L3.cache2way.size() == 0){
+//                    L3_HitMissCount[1]++;
+//                    L3_accessTime += System.currentTimeMillis() - start;
+//                }
                 //size가 0이 아닐 경우 캐시 탐색
-                for(int j = 0; j<L3.cache2way.size(); j++){
-                    if(L3.cache2way.get(j).set[0].tag == data.index || L3.cache2way.get(j).set[1].tag == data.index){
+                for(int j = 0; j<L3.cacheSize; j++){
+                    int L4setidx0 = (L3.cache2way.get(j).set[0].tag*256) + L3.cache2way.get(j).setIndex;
+                    int memsetidx0 = (L4.cache.get(L4setidx0).set[0].tag*4096)+ L4.cache.get(L4setidx0).setIndex;
+                    int L4setidx1 = (L3.cache2way.get(j).set[1].tag*256) + L3.cache2way.get(j).setIndex;
+                    int memsetidx1 = (L4.cache.get(L4setidx1).set[0].tag*4096)+ L4.cache.get(L4setidx1).setIndex;
+
+                    if(memsetidx0 == data.index && L3.cache2way.get(j).set[0].valid == 1){
+
+                        L3_HitMissCount[0] ++;
+                        L3_accessTime += System.currentTimeMillis() - start;
+                        flg = true;
+
+                        // hitLayer가 3인 경우 상위 캐시 레이어에 데이터 추가
+                        int L3setIndex = L3.cache2way.get(j).setIndex;
+
+                        L2.cache.get(L3setIndex%16).set[0].tag = L3setIndex/16;
+                        L2.cache.get(L3setIndex%16).set[0].valid = 1;
+                        L2.cache.get(L3setIndex%16).set[0].data = data;
+                        L2.cache.get(L3setIndex%16).setIndex = L3setIndex%16;
+                        int L2setIndex = L3setIndex%16;
+
+                        L1.cache.get(0).set[0].tag = L2setIndex/1;
+                        L1.cache.get(0).set[0].valid = 1;
+                        L1.cache.get(0).set[0].data = data;
+
+                        break;
+
+                    }else if(memsetidx1 == data.index && L3.cache2way.get(j).set[1].valid == 1){
                         L3_HitMissCount[0] ++;
                         L3_accessTime += System.currentTimeMillis() - start;
                         flg = true;
@@ -171,30 +196,30 @@ public class memoryhierarchy {
                         // hitLayer가 3인 경우 위 캐시에 데이터 추가
 
 
-                    }else{
-                        L3_HitMissCount[1]++;
-                        L3_accessTime += System.currentTimeMillis() - start;
                     }
                 }
+                //L3에서 Miss -> 하단 코드로 넘어감, flg=false
+                L3_HitMissCount[1]++;
+                L3_accessTime += System.currentTimeMillis() - start;
             }
 
             // L4에 있는지 없는지 확인
             if (!flg){
                 //현재 cache size가 0일 경우
-                if(L4.cache.size() == 0){
-                    L4_HitMissCount[1]++;
-                    L4_accessTime += System.currentTimeMillis() - start;
-                }
-                //size가 0이 아닐 경우 캐시 탐색
-                for(int j = 0; j<L4.cache.size(); j++){
-                    if(L4.cache.get(j).set[0].tag == data.index){ // 수정 필요
+//                if(L4.cache.size() == 0){
+//                    L4_HitMissCount[1]++;
+//                    L4_accessTime += System.currentTimeMillis() - start;
+//                }
+                //캐시 탐색
+                for(int j = 0; j<L4.cacheSize; j++){
+                    //cpu에서 요구한 주소값과 cache의 주소값이 일치할 때, 해당 주소의 데이터를 cache에서 전달, flg = true
+                    if( (((L4.cache.get(j).set[0].tag*4096)+ L4.cache.get(j).setIndex) == data.index) && (L4.cache.get(j).set[0].valid == 1) ){ // 수정 필요
                         L4_HitMissCount[0] ++;
                         L4_accessTime += System.currentTimeMillis() - start;
                         flg = true;
-//                        hitLayer = 4;
 
-                        // hitLayer가 4인 경우 위 캐시에 데이터 추가
-                        int L4setIndex = L4.cache.get("###").setIndex;
+                        // hitLayer가 4인 경우 상위 캐시 레이어에 데이터 추가
+                        int L4setIndex = L4.cache.get(j).setIndex;
 
                         if(L3.cache2way.get(L4setIndex%256).set.length < 2){
                             //해당 set에 자리가 남아있는 경우
@@ -225,12 +250,12 @@ public class memoryhierarchy {
                         L1.cache.get(0).set[0].valid = 1;
                         L1.cache.get(0).set[0].data = data;
 
-
-                    }else{
-                        L4_HitMissCount[1]++;
-                        L4_accessTime += System.currentTimeMillis() - start;
+                        break;
                     }
                 }
+                //L4에서 Miss -> 하단 코드로 넘어감, flg=false
+                L4_HitMissCount[1]++;
+                L4_accessTime += System.currentTimeMillis() - start;
             }
 
             // hitLayer가 0인 경우 -> 캐시 어디에도 없음
