@@ -194,7 +194,7 @@ public class memoryhierarchy {
 //                        hitLayer = 4;
 
                         // hitLayer가 4인 경우 위 캐시에 데이터 추가
-                        int L4setIndex = L4.cache.get(##).setIndex;
+                        int L4setIndex = L4.cache.get("###").setIndex;
 
                         if(L3.cache2way.get(L4setIndex%256).set.length < 2){
                             //해당 set에 자리가 남아있는 경우
