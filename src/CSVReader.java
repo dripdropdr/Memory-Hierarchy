@@ -9,7 +9,7 @@ public class CSVReader {
 
     public List<List<String>> readCSV() {
         List<List<String>> csvList = new ArrayList<List<String>>();
-        File csv = new File("D:\\ITM-work\\Computer Systems\\MemoryHierachy\\src\\avocado-test.csv");
+        File csv = new File("D:\\ITM-work\\Computer Systems\\MemoryHierachy\\src\\wordfreq_test.csv");
         BufferedReader br = null;
         String line = "";
 
