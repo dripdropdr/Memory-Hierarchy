@@ -1,21 +1,23 @@
 import java.util.*;
 
 class Data{
-    int index; // 메모리 내 주소값
-    String word; //
+    int index; // 최하위 메모리 내 주소값(데이터 호출, 식별시 사용)
+    String word;
     int frequency;
 }
 class Block{
     int valid;
     int tag;
-    Data data;
+    Data data; // 데이터 담고 있음 == block
+    long accessTime;
+
 }
 class Set1{
-    // setIndex -> cache내 인덱스로 구성
+    int setIndex; // -> cache내 인덱스로 구성
     Block set[] = new Block[1];
 }
 class Set2{
-    // setIndex -> cache내 인덱스로 구성
+    int setIndex; // -> cache내 인덱스로 구성
     Block set[] = new Block[2];
 }
 
@@ -106,7 +108,7 @@ public class memoryhierarchy {
             int hitLayer = 0;
 
             //L1에 있는지 없는지 확인
-            //cache size가 0일 경우
+            //현재 cache size가 0일 경우
             if(L1.cache.size() == 0) {
                 L1_HitMissCount[1]++;
                 L1_accessTime += System.currentTimeMillis() - start;
@@ -115,7 +117,7 @@ public class memoryhierarchy {
                 L1_HitMissCount[0] ++;
                 L1_accessTime += System.currentTimeMillis() - start;
                 flg = true;
-                hitLayer = 1;
+//                hitLayer = 1;
             }else{
                 L1_HitMissCount[1]++;
                 L1_accessTime += System.currentTimeMillis() - start;
@@ -123,60 +125,153 @@ public class memoryhierarchy {
 
             // L2에 있는지 없는지 확인
             if (!flg){
-                //cache size가 0일 경우
+                //현재 cache size가 0일 경우
                 if(L2.cache.size() == 0){
                     L2_HitMissCount[1]++;
+                    L2_accessTime += System.currentTimeMillis() - start;
                 }
                 //size가 0이 아닐 경우 캐시 탐색
                 for(int j = 0; j<L2.cache.size(); j++){
                     if(L2.cache.get(j).set[0].tag == data.index){
                         L2_HitMissCount[0] ++;
+                        L2_accessTime += System.currentTimeMillis() - start;
                         flg = true;
-                        hitLayer = 2;
+//                        hitLayer = 2;
+
+                        // hitLayer가 2인 경우 위 캐시에 데이터 추가
+//                        L1.cache.get(0).set[0].valid = 1;
+//                        L1.cache.get(0).set[0].tag = data;
+
+
+
+                        break;
+
                     }else{
                         L2_HitMissCount[1]++;
+                        L2_accessTime += System.currentTimeMillis() - start;
                     }
                 }
             }
 
-            // L3에 있는지 없는지 확인
+            // L3에 있는지 없는지 확인 + 각 block에 호출 timestamp 기록
             if (!flg){
-                //cache size가 0일 경우
+                //현재 cache size가 0일 경우
                 if(L3.cache2way.size() == 0){
                     L3_HitMissCount[1]++;
+                    L3_accessTime += System.currentTimeMillis() - start;
                 }
                 //size가 0이 아닐 경우 캐시 탐색
                 for(int j = 0; j<L3.cache2way.size(); j++){
                     if(L3.cache2way.get(j).set[0].tag == data.index || L3.cache2way.get(j).set[1].tag == data.index){
                         L3_HitMissCount[0] ++;
+                        L3_accessTime += System.currentTimeMillis() - start;
                         flg = true;
-                        hitLayer = 3;
+//                        hitLayer = 3;
+
+                        // hitLayer가 3인 경우 위 캐시에 데이터 추가
+
+
                     }else{
                         L3_HitMissCount[1]++;
+                        L3_accessTime += System.currentTimeMillis() - start;
                     }
                 }
             }
 
             // L4에 있는지 없는지 확인
             if (!flg){
-                //cache size가 0일 경우
+                //현재 cache size가 0일 경우
                 if(L4.cache.size() == 0){
                     L4_HitMissCount[1]++;
+                    L4_accessTime += System.currentTimeMillis() - start;
                 }
                 //size가 0이 아닐 경우 캐시 탐색
                 for(int j = 0; j<L4.cache.size(); j++){
-                    if(L4.cache.get(j).set[0].tag == data.index){
+                    if(L4.cache.get(j).set[0].tag == data.index){ // 수정 필요
                         L4_HitMissCount[0] ++;
+                        L4_accessTime += System.currentTimeMillis() - start;
                         flg = true;
-                        hitLayer = 4;
+//                        hitLayer = 4;
+
+                        // hitLayer가 4인 경우 위 캐시에 데이터 추가
+                        int L4setIndex = L4.cache.get(##).setIndex;
+
+                        if(L3.cache2way.get(L4setIndex%256).set.length < 2){
+                            //해당 set에 자리가 남아있는 경우
+                            L3.cache2way.get(L4setIndex%256).set[L3.cache2way.get(L4setIndex%256).set.length].tag = L4setIndex/256;
+                            L3.cache2way.get(L4setIndex%256).set[L3.cache2way.get(L4setIndex%256).set.length].valid = 1;
+                            L3.cache2way.get(L4setIndex%256).set[L3.cache2way.get(L4setIndex%256).set.length].data = data;
+                        }else{
+                            //자리가 없는 경우 LRU 고려
+                            if(L3.cache2way.get(L4setIndex%256).set[0].accessTime > L3.cache2way.get(L4setIndex%256).set[1].accessTime){
+                                L3.cache2way.get(L4setIndex%256).set[1].tag = L4setIndex/256;
+                                L3.cache2way.get(L4setIndex%256).set[1].valid = 1;
+                                L3.cache2way.get(L4setIndex%256).set[1].data = data;
+                            }else{
+                                L3.cache2way.get(L4setIndex%256).set[0].tag = L4setIndex/256;
+                                L3.cache2way.get(L4setIndex%256).set[0].valid = 1;
+                                L3.cache2way.get(L4setIndex%256).set[0].data = data;
+                            }
+                        }
+                        int L3setIndex = L4setIndex%256;
+
+                        L2.cache.get(L3setIndex%16).set[0].tag = L3setIndex/16;
+                        L2.cache.get(L3setIndex%16).set[0].valid = 1;
+                        L2.cache.get(L3setIndex%16).set[0].data = data;
+                        L2.cache.get(L3setIndex%16).setIndex = L3setIndex%16;
+                        int L2setIndex = L3setIndex%16;
+
+                        L1.cache.get(0).set[0].tag = L2setIndex/1;
+                        L1.cache.get(0).set[0].valid = 1;
+                        L1.cache.get(0).set[0].data = data;
+
+
                     }else{
                         L4_HitMissCount[1]++;
+                        L4_accessTime += System.currentTimeMillis() - start;
                     }
                 }
             }
 
+            // hitLayer가 0인 경우 -> 캐시 어디에도 없음
+            if(!flg){
+                L4.cache.get(data.index%4096).set[0].tag = data.index/4096;
+                L4.cache.get(data.index%4096).set[0].valid = 1;
+                L4.cache.get(data.index%4096).set[0].data = data;
+                L4.cache.get(data.index%4096).setIndex = data.index%4096;
+                int L4setIndex = data.index%4096;
 
+                if(L3.cache2way.get(L4setIndex%256).set.length < 2){
+                    //해당 set에 자리가 남아있는 경우
+                    L3.cache2way.get(L4setIndex%256).set[L3.cache2way.get(L4setIndex%256).set.length].tag = L4setIndex/256;
+                    L3.cache2way.get(L4setIndex%256).set[L3.cache2way.get(L4setIndex%256).set.length].valid = 1;
+                    L3.cache2way.get(L4setIndex%256).set[L3.cache2way.get(L4setIndex%256).set.length].data = data;
+                }else{
+                    //자리가 없는 경우 LRU 고려
+                    if(L3.cache2way.get(L4setIndex%256).set[0].accessTime > L3.cache2way.get(L4setIndex%256).set[1].accessTime){
+                        L3.cache2way.get(L4setIndex%256).set[1].tag = L4setIndex/256;
+                        L3.cache2way.get(L4setIndex%256).set[1].valid = 1;
+                        L3.cache2way.get(L4setIndex%256).set[1].data = data;
+                    }else{
+                        L3.cache2way.get(L4setIndex%256).set[0].tag = L4setIndex/256;
+                        L3.cache2way.get(L4setIndex%256).set[0].valid = 1;
+                        L3.cache2way.get(L4setIndex%256).set[0].data = data;
+                    }
 
+                }
+                int L3setIndex = L4setIndex%256;
+
+                L2.cache.get(L3setIndex%16).set[0].tag = L3setIndex/16;
+                L2.cache.get(L3setIndex%16).set[0].valid = 1;
+                L2.cache.get(L3setIndex%16).set[0].data = data;
+                L2.cache.get(L3setIndex%16).setIndex = L3setIndex%16;
+                int L2setIndex = L3setIndex%16;
+
+                L1.cache.get(0).set[0].tag = L2setIndex/1;
+                L1.cache.get(0).set[0].valid = 1;
+                L1.cache.get(0).set[0].data = data;
+//            L1.cache.get(L2setIndex%1).setIndex = 1;
+            }
         }
 
 
