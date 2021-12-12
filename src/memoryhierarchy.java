@@ -45,7 +45,7 @@ public class memoryhierarchy {
         CSVReader csvReader = new CSVReader();
         List<List<String>> tmp = csvReader.readCSV();
 
-        ArrayList<Data> avocado = new ArrayList<>();
+        ArrayList<Data> wordData = new ArrayList<>();
 
         //Hit Miss 기록
         int L1_HitMissCount[] = new int[2];
@@ -61,10 +61,10 @@ public class memoryhierarchy {
 
         // 메모리 생성, 주소값 0 ~ 60383
         for(int i=1; i<tmp.size(); i++) {
-            avocado.add(new Data());
-            avocado.get(i-1).index = i-1;
-            avocado.get(i-1).word = tmp.get(i).get(1);
-            avocado.get(i-1).frequency = Integer.parseInt(tmp.get(i).get(1));
+            wordData.add(new Data());
+            wordData.get(i-1).index = i-1;
+            wordData.get(i-1).word = tmp.get(i).get(1);
+            wordData.get(i-1).frequency = Integer.parseInt(tmp.get(i).get(1));
         }
 
         //각 cache layer 생성
