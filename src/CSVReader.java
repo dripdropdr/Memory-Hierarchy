@@ -2,14 +2,15 @@ import java.io.*;
 import java.util.*;
 
 public class CSVReader {
+
     public static void main(String[] args) {
 //        CSVReader csvReader = new CSVReader();
 //        csvReader.readCSV();
     }
 
-    public List<List<String>> readCSV() {
+    public List<List<String>> readCSV(String root) {
         List<List<String>> csvList = new ArrayList<List<String>>();
-        File csv = new File("D:\\ITM-work\\Computer Systems\\MemoryHierachy\\src\\wordfreq_test.csv");
+        File csv = new File(root);
         BufferedReader br = null;
         String line = "";
 
